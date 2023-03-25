@@ -1,0 +1,11 @@
+Hoe het werkt:
+je typ je naam in
+daardoor wordt je in de db gezte
+je naam gaat ook de cookies in
+admin deelt teams in
+kan op begin drukken
+als er gerefreshed wordt moet cookie worden gechekt. of er een naam in staat
+zoja dan kan speler verder spelen
+als iedereen erin is en in teams zit dan drukt admin op play
+dan open scherm met toestemming vragen en scannen
+dan kunnen ze scannen

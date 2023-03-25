@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;" />
+  <link rel="stylesheet" href="./src/css/preloader.css" />
+  <link rel="stylesheet" href="./src/css/styles.css" />
+  <title>QR scan ding</title>
+</head>
+
+<body>
+  <h1>QR scanner</h1>
+  <div id="GameSelection">
+    Kies een onderstaande bestaande game
+    <div id="selectionGames">
+
+    </div>
+    <div>
+      <label for="inputName">Vul de naam van een nieuwe game in: </label><input type="text" name="Naam"
+        placeholder="De game naam" id="inputName"><br>
+      <label for="inputName">Vul hier het totaal aantal teams in: </label><input type="int" name="Teams"
+        placeholder="Totaal teams" id="inputTeams"><br>
+      <input type="submit" value="Play the game" id="PlayGame">
+    </div>
+  </div>
+  <div id="TeamMenu" class="pages">
+    <h2>Hier onder staan alle spelers. Deel ze in per team</h2>
+    <button onclick="getAllPlayers()">Refresh players</button>
+    <div id="playerHolder">
+
+    </div>
+  </div>
+
+
+  <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"
+    integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H"
+    crossorigin="anonymous"></script>
+  <script>
+    //socketio stuff
+    var socket = io();
+    let chosenGame;
+    socket.emit('getGames');
+
+    socket.on('allgames', async function (data) {
+      // console.log(data.games)
+      data.games.forEach(game => {
+        console.log(game)
+        addExistingGame(game);
+        addEventListeners();
+      });
+    })
+
+    document.getElementById('PlayGame').addEventListener('click', (e) => {
+      // e.precentDefault();
+      // console.log('boe')
+      document.getElementById('GameSelection').classList.add('pages')
+      document.getElementById('TeamMenu').classList.remove('pages')
+
+      let name = document.getElementById('inputName').value;
+      let team = document.getElementById('inputTeams').value;
+      socket.emit('command', { command: 'makeGame', game: name, totaalTeams: team });
+    })
+
+    socket.on('gameChoice', (data) => {
+      chosenGame = data.gameUUID;
+      getAllPlayers();
+    })
+
+    function getAllPlayers() {
+      socket.emit('command', { command: 'getAllPlayers', game: chosenGame })
+    }
+
+    socket.on('allPlayers', function (data) {
+      console.log(data)
+      showAllPlayers(data)
+    })
+
+
+
+    // socket.on('initialData', function(data) {
+    //     console.log(data)
+    //     lijstId = data.id;
+    //     // console.log(data.lijstObject)
+    //     for (person in data.lijstObject) {
+    //       console.log(person)
+    //       let sectionBlock = makePersonBlock(data.lijstObject[person].uuid, data.lijstObject[person].name, data.lijstObject[person].relatie, data.lijstObject[person].foto, data.prijsObject)
+    //       // console.log(sectionBlock)
+    //       $('#overviewPage>div').append(sectionBlock)
+    //     }
+    //   })
+
+    function showAllPlayers(data) {
+      let holder = document.getElementById('playerHolder');
+      holder.innerHTML = "";
+
+      data.players.forEach(player => {
+        let item = '<div class="playerHolderItem" id="'+player.ID+'">';
+        //button loader
+        item += '<div>Team keuze: '
+        item += player.Team != 0 ? player.Team : ''
+        item +='<br>';
+        console.log(data.totalTeams[0].TotalTeams)
+        for (let i = 1; i <= data.totalTeams[0].TotalTeams; i++) {
+          item += '<button class="playerTeamKeuze" onclick="choseTeam(\''+player.ID+'\', \''+i+'\')">' + i + '</button>';
+        }
+
+        item += '</div>';
+
+        item += '<div>Naam: ' + player.Name + '</div></div>';
+
+        holder.innerHTML += item;
+      });
+    }
+
+    function choseTeam(player, team) {
+      socket.emit('command', {command: 'teamChoice', player: player, team: team})
+    }
+
+    socket.on('playerTeamUpdate', function(data) {
+      let playerItem  =document.getElementById(data.player);
+      console.log(playerItem.children[0].firstChild.data)
+      playerItem.children[0].firstChild.data = "Team keuze: "+data.team;
+    })
+
+    async function addExistingGame(game) {
+      let holder = document.getElementById('selectionGames');
+      // console.log(holder);
+      let item = '<div class="existingGameItem"><div>' + game.ID + '<br>' + game.Name + '<br>' + game.TotalTeams + '</div></div>';
+      holder.innerHTML += item;
+      // console.log(lastChild)
+    }
+
+    function addEventListeners() {
+      let holder = document.getElementById('selectionGames');
+      for (let i = 0; i < holder.children.length; i++) {
+        let lastChild = holder.children[i];
+        lastChild.addEventListener("click", function () {
+          chosenGame = lastChild.children[0].firstChild.data;
+          getAllPlayers();
+          document.getElementById('GameSelection').classList.add('pages')
+          document.getElementById('TeamMenu').classList.remove('pages')
+        })
+      }
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "qr_scan_project",
+  "version": "1.0.1",
+  "description": "Gaaf project",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "test": "node app.js",
+    "server": "nodemon server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mysql": "^2.18.1",
+    "nodemon": "^2.0.21",
+    "socket.io": "^4.6.1",
+    "uuidv4": "^6.2.13"
+  }
+}

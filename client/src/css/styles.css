@@ -1,0 +1,49 @@
+#html5-qrcode-anchor-scan-type-change {
+  display: hidden;
+}
+
+.hidden {
+  display: hidden !important;
+}
+
+#GameSelection {
+  color: azure;
+}
+
+#GameSelection>div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.existingGameItem {
+  color: azure;
+  display: inline-block;
+  margin: 10px 15px;
+  background-color: rgba(240, 255, 255, 0.4);
+  padding: 5px;
+  border-radius: 10px;
+}
+
+#playerHolder {
+  display: flex;
+  margin: 5px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.playerHolderItem {
+  display: flex;
+  flex-direction: column;
+  margin: 1px 7px;
+  padding: 5px;
+  background-color: #c4dbc4e6;
+  border-radius: 15px;
+}
+
+.playerTeamKeuze {
+  padding: 2px 4px;
+  margin: 1px 3px;
+  background-color: #b9cfd9;
+  border-radius: 5px;
+}
