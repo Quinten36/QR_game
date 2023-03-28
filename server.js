@@ -58,18 +58,25 @@ Game.onConnect = async function (socket) {
         break;
       case 'getAllPlayers':
         command = 'Getting all players';
-        let players = await select("SELECT * FROM speler WHERE GameID = '"+data.game+"'")
-        let teamSize = await select("SELECT TotalTeams FROM game WHERE ID = '"+data.game+"'")
-        console.log(players)
-        socket.emit('allPlayers', {players: players, totalTeams: teamSize})
-        // updateOnceAll();
+        let t = await select("SELECT Started, TotalTeams FROM game WHERE ID = '"+data.game+"'");
+        if (t[0].Started !== 1) {
+          let players = await select("SELECT * FROM speler WHERE GameID = '"+data.game+"'")
+          socket.emit('allPlayers', {players: players, totalTeams: t[0].TotalTeams})
+        } else
+          socket.emit('gameAlreadyStarted')
         break;
       case 'teamChoice':
         command = 'assigning team to a player';
-        console.log(typeof data.team)
         await update("UPDATE `speler` SET `Team`="+parseInt(data.team)+" WHERE `ID` = '"+data.player+"'");
-        //miss een update all?
         socket.emit('playerTeamUpdate', {player:data.player, team:data.team})
+        break;
+      case 'startGame':
+        command = 'game has been started';
+        await update("UPDATE `game` SET `Started`= 1 WHERE `ID` = '"+data.game+"'");
+        var gameState = await select("SELECT * FROM `game` WHERE ID = '"+data.game+"'");
+        var updatePakket = ['gameStateUpdate', {gameState: gameState}]
+        Game.updateAll(updatePakket);
+        //update all players
         break;
       case 'rebootServer':
         command = 'Reboot server';
@@ -84,6 +91,14 @@ Game.onConnect = async function (socket) {
   });
   // Controller.updateOnce();
 };
+
+Game.updateAll = function(updatePacket) {
+  for (let i in Player.list) {
+    // updateOncePack.playerStatus = connectedData[Player.list[i].id].status;
+    // updateOncePack.sticker = connectedData[Player.list[i].id].sticker;
+    SOCKET_LIST[Player.list[i].id].emit(updatePacket[0], updatePacket[1]);
+  }
+}
 
 /* -- Player -- */
 /* -------------------------------------------------------------------------------------- */
@@ -107,7 +122,7 @@ Player.onConnect = function(socket) {
       case 'joinGame':
         command = 'join game';
         let v4 = uuid();
-        let lastGameID = await select("SELECT `ID` FROM `game` order by `MadeOn` desc LIMIT 1;");
+        var lastGameID = await select("SELECT `ID` FROM `game` order by `MadeOn` desc LIMIT 1;");
         console.log(lastGameID[0].ID);
         await insert("INSERT INTO `speler`(`ID`, `GameID`, `Name`) VALUES ('"+v4+"','"+lastGameID[0].ID+"','"+data.name+"')");
         socket.emit('gameChoice', {gameUUID: v4});
@@ -116,6 +131,13 @@ Player.onConnect = function(socket) {
         command = 'Start session';
         sessionActive = true;
         // updateOnceAll();
+        break;
+      case 'checkGameState':
+        command = 'checking game state';
+        var lastGameID = await select("SELECT `ID` FROM `game` order by `MadeOn` desc LIMIT 1;");
+        var gameState = await select("SELECT * FROM `game` WHERE ID = '"+lastGameID[0].ID+"'");
+        var updatePakket = ['gameStateUpdate', {gameState: gameState}]
+        Game.updateAll(updatePakket);
         break;
       case 'rebootServer':
         command = 'Reboot server';

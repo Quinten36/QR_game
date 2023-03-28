@@ -11,6 +11,11 @@
 </head>
 
 <body>
+  <header>
+    <button id="forgetPlayer">
+      Forget speler
+    </button>
+  </header>
   <h1>QR scanner</h1>
   <div id="sectionPreGame">
     <label for="inputName">Vul je naam in: </label><input type="text" name="Naam" placeholder="Je naam" id="inputName">
@@ -56,6 +61,7 @@
     console.log(getCookie('QRgamePlayerID').length);
     if(getCookie('QRgamePlayerID').length > 0) {
       playerID = getCookie('QRgamePlayerID');
+      socket.emit('command', {command: 'checkGameState'})
 
       document.getElementById('sectionPreGame').classList.add('pages')
       document.getElementById('Preloader').classList.remove('pages')
@@ -72,9 +78,29 @@
       socket.emit('command', { command: 'joinGame', name: name });
     })
 
+    document.getElementById('forgetPlayer').addEventListener('click', (e) => {
+      // const confirmAction = () => {
+        const response = confirm("Are you sure you want to do that?");
+        if (response) {
+          setCookie('QRgamePlayerID', null, 0)
+          location.reload();
+        } 
+      // }
+    })
+
     socket.on('gameChoice', function(data) {
       setCookie('QRgamePlayerID', data.gameUUID, 3);
       playerID = getCookie('QRgamePlayerID');
+    })
+
+    socket.on('gameStateUpdate', function(data) {
+      console.log(data)
+      if (data.gameState[0].Started) {
+        console.log('Game started')
+        document.getElementById('Preloader').classList.add('pages')
+        document.getElementById('sectionGame').classList.remove('pages')
+        startQrGame();
+      }
     })
 
 

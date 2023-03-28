@@ -31,6 +31,10 @@
     <div id="playerHolder">
 
     </div>
+    <button id="startGame">Start game</button>
+  </div>
+  <div id="gameScoreBoard" class="pages">
+    scoreboard
   </div>
 
 
@@ -63,6 +67,10 @@
       socket.emit('command', { command: 'makeGame', game: name, totaalTeams: team });
     })
 
+    document.getElementById('startGame').addEventListener('click', (e) => {
+      socket.emit('command', {command: 'startGame', game: chosenGame})
+    })
+
     socket.on('gameChoice', (data) => {
       chosenGame = data.gameUUID;
       getAllPlayers();
@@ -75,6 +83,10 @@
     socket.on('allPlayers', function (data) {
       console.log(data)
       showAllPlayers(data)
+    })
+
+    socket.on('gameAlreadyStarted', () => {
+      gameStarted();
     })
 
 
@@ -91,6 +103,12 @@
     //     }
     //   })
 
+    function gameStarted() {
+      document.getElementById('TeamMenu').classList.add('pages')
+      document.getElementById('gameScoreBoard').classList.remove('pages')
+      //get initial scores
+    }
+
     function showAllPlayers(data) {
       let holder = document.getElementById('playerHolder');
       holder.innerHTML = "";
@@ -101,8 +119,8 @@
         item += '<div>Team keuze: '
         item += player.Team != 0 ? player.Team : ''
         item +='<br>';
-        console.log(data.totalTeams[0].TotalTeams)
-        for (let i = 1; i <= data.totalTeams[0].TotalTeams; i++) {
+        console.log(data.totalTeams)
+        for (let i = 1; i <= data.totalTeams; i++) {
           item += '<button class="playerTeamKeuze" onclick="choseTeam(\''+player.ID+'\', \''+i+'\')">' + i + '</button>';
         }
 
